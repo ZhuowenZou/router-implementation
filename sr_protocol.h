@@ -136,7 +136,11 @@ typedef struct sr_ethernet_hdr sr_ethernet_hdr_t;
 
 enum sr_ip_protocol {
   ip_protocol_icmp = 0x0001,
+  ip_protocol_tcp = 0x0006,
+  ip_protocol_udp = 0x0011,
 };
+
+
 
 enum sr_ethertype {
   ethertype_arp = 0x0806,
@@ -169,5 +173,23 @@ struct sr_arp_hdr
 typedef struct sr_arp_hdr sr_arp_hdr_t;
 
 #define sr_IFACE_NAMELEN 32
+
+// Protocol for ICMP
+enum sr_icmp_type{
+	icmp_type_echo_req = 8,
+	icmp_type_echo_rep = 0,
+	icmp_type_dest_unreach = 3,
+	icmp_type_time_exceed = 11,
+}
+
+enum sr_icmp_code{
+	icmp_code_empty = 0,
+	icmp_code_net_unreach = 0,
+	icmp_code_host_unreach = 1,
+	icmp_code_port_unreach = 3,
+	icmp_code_ttl_expired = 0,
+}
+
+
 
 #endif /* -- SR_PROTOCOL_H -- */

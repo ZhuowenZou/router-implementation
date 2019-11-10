@@ -22,6 +22,9 @@
 #include "sr_arpcache.h"
 #include "sr_utils.h"
 
+#include "sr_ip_handler.h"
+#include "sr_arp_handler.h"
+
 /*---------------------------------------------------------------------
  * Method: sr_init(void)
  * Scope:  Global
@@ -78,7 +81,19 @@ void sr_handlepacket(struct sr_instance* sr,
 
   printf("*** -> Received packet of length %d \n",len);
 
-  /* fill in code here */
+  uint16_t ether_type = ethertype(packet);
+  struct sr_if *curr_if = sr_get_interface(sr, interface);
+
+  switch (ether_type){
+  	  case ethertype_arp:
+  		  sr_arp_handler(sr, packet, len, curr_if);
+  		  break;
+  	  case ethertype_ip:
+  		  sr_ip_handler(sr, packet, len, curr_if);
+  		  break;
+      default:
+	  	  fprintf(stderr, "Dropping packed not of IP/ARP type\n");
+  }
 
 }/* end sr_ForwardPacket */
 
