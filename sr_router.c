@@ -80,6 +80,7 @@ void sr_handlepacket(struct sr_instance* sr,
   assert(interface);
 
   printf("*** -> Received packet of length %d \n",len);
+  print_hdrs(packet, len);
 
   uint16_t ether_type = ethertype(packet);
   struct sr_if *curr_if = sr_get_interface(sr, interface);
