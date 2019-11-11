@@ -189,6 +189,6 @@ enum sr_icmp_code{
 };
 
 
-#define sr_IFACE_NAMELEN 32;
+#define sr_IFACE_NAMELEN 32
 
 #endif /* -- SR_PROTOCOL_H -- */
