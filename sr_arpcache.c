@@ -11,11 +11,13 @@
 #include "sr_if.h"
 #include "sr_protocol.h"
 
+#include "sr_util.h"
+
 
 // Why is this called handle I already name something handler oof
 void sr_arpcache_handlereq(struct sr_instance *sr, struct sr_arpreq *  request){
 
-	pthread_mutex_lock(&(cache->lock));
+	pthread_mutex_lock(&(sr->cache.lock));
 
 	time_t curr = time(NULL);
 
@@ -29,7 +31,7 @@ void sr_arpcache_handlereq(struct sr_instance *sr, struct sr_arpreq *  request){
 						icmp_code_host_unreach, sr_get_interface(sr, curr_packet->iface));
 				curr_packet = curr_packet->next;
 			}
-			sr_arpreq_destroy(&(sr->cache), request)
+			sr_arpreq_destroy(&(sr->cache), request);
 		}
 		else{
 			sr_send_arpreq(sr, request->ip);
@@ -37,7 +39,7 @@ void sr_arpcache_handlereq(struct sr_instance *sr, struct sr_arpreq *  request){
 			request->times_sent++;
 		}
 	}
-	pthread_mutex_unlock(&(cache->lock));
+	pthread_mutex_unlock(&(sr->cache->lock));
 }
 
 /* 
