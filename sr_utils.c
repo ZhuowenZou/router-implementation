@@ -321,7 +321,7 @@ void sr_send_arpreq(struct sr_instance *sr, uint32_t q_ip){
 }
 
 void sr_send_arprep(struct sr_instance *sr, sr_ethernet_hdr_t *from_eth_hdr,
-		sr_arp_hdr_t *from_srp_hdr, struct sr_if* curr_if) {
+		sr_arp_hdr_t *from_arp_hdr, struct sr_if* curr_if) {
 
 	unsigned int pac_len = sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t);
 	uint8_t *packet = (uint8_t *)malloc(pac_len);
@@ -354,8 +354,8 @@ uint8_t ip_check_size(unsigned int len){
 }
 uint8_t ip_check_sum(sr_ip_hdr_t *ip_hdr){
 
-	uint8 valid = 0;
-	uint16 temp = ip_hdr->ip_sum;
+	uint8_t valid = 0;
+	uint16_t temp = ip_hdr->ip_sum;
 	ip_hdr->ip_sum = 0;
 	if (cksum(ip_hdr, sizeof(sr_ip_hdr_t)) == temp){
 		valid = 1;
@@ -365,13 +365,13 @@ uint8_t ip_check_sum(sr_ip_hdr_t *ip_hdr){
 }
 
 uint8_t icmp_check_size(unsigned int len){
-	return (len >= (sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t) + sizeof(sr_icmp_hdr_t)));
+	return (len >= (sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t) + sizeof(sr_icmp_t11_hdr_t)));
 }
 
-uint8_t icmp_check_sum(sr_ip_hdr_t *icmp_hdr){
+uint8_t icmp_check_sum(sr_icmp_hdr_t *icmp_hdr){
 
-	uint8 valid = 0;
-	uint16 temp = icmp_hdr->icmp_sum;
+	uint8_t valid = 0;
+	uint16_t temp = icmp_hdr->icmp_sum;
 	icmp_hdr->icmp_sum = 0;
 	if (cksum(icmp_hdr, sizeof(sr_icmp_t11_hdr_t)) == temp){
 		valid = 1;
