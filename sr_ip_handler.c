@@ -81,7 +81,8 @@ void sr_my_ip_handler(struct sr_instance* sr, uint8_t *packet, unsigned int len,
 	switch (ip_protocol){
 		// Hanlde icmp
 		case ip_protocol_icmp:
-			sr_icmp_t11_hdr_t* icmp_hdr = get_icmp_hdr(packet);
+
+			icmp_hdr = get_icmp_hdr(packet);
 
 			// Check sanity
 			if (!icmp_check_sanity(ip_hdr, icmp_hdr, len))
