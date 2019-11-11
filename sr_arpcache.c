@@ -11,13 +11,49 @@
 #include "sr_if.h"
 #include "sr_protocol.h"
 
+
+// Why is this called handle I already name something handler oof
+void sr_arpcache_handlereq(struct sr_instance *sr, struct sr_arpreq *  request){
+
+	pthread_mutex_lock(&(cache->lock));
+
+	time_t curr = time(NULL);
+
+	if (difftime(curr, request->sent) > 1){
+		Debug("ARP req pass one second.\n");
+		if (request->times_sent >= 5){
+			Debug("Dropping ARP req for exceeding req num.\n");
+			struct sr_packet *curr_packet = request->packets;
+			while (curr_packet){
+				sr_send_icmp(sr, curr_packet->buf, icmp_type_dest_unreach,
+						icmp_code_host_unreach, sr_get_interface(sr, curr_packet->iface));
+				curr_packet = curr_packet->next;
+			}
+			sr_arpreq_destroy(&(sr->cache), request)
+		}
+		else{
+			sr_send_arpreq(sr, request->ip);
+			request->sent = time(NULL);
+			request->times_sent++;
+		}
+	}
+	pthread_mutex_unlock(&(cache->lock));
+}
+
 /* 
   This function gets called every second. For each request sent out, we keep
   checking whether we should resend an request or destroy the arp request.
   See the comments in the header file for an idea of what it should look like.
 */
 void sr_arpcache_sweepreqs(struct sr_instance *sr) { 
-    /* Fill this in */
+    struct sr_arpreq *curr = sr->cache.requests;
+    struct sr_arpreq *next;
+    while (curr){
+    	// save next req in case of destruction of the current one
+    	next = curr->next;
+    	sr_arpcache_handlereq(sr, curr);
+    	curr = next;
+    }
 }
 
 /* You should not need to touch the rest of this code. */

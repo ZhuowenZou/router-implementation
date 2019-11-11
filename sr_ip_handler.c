@@ -116,8 +116,8 @@ void sr_forward_ip(struct sr_instance* sr, uint8_t *packet, unsigned int len, st
 		}
 		else{
 			Debug("No entry in ARP table. Sending ARP request\n");
-			structsr_arpreq * request = sr_arpcache_queuereq(&(sr->cache), ip_hdr->ip_dst, packet, len, out_if->name);
-			sr_arpreq_handle(sr, req);
+			struct sr_arpreq * request = sr_arpcache_queuereq(&(sr->cache), ip_hdr->ip_dst, packet, len, out_if->name);
+			sr_arpcache_handlereq(sr, request);
 		}
 	}
 	else {
