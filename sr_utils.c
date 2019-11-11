@@ -314,7 +314,7 @@ void sr_send_arpreq(struct sr_instance *sr, uint32_t q_ip){
 	arp_hdr->ar_op = htons(arp_op_request);
 	memcpy(arp_hdr->ar_sha, out_if->addr, ETHER_ADDR_LEN);
 	arp_hdr->ar_sip = out_if->ip;
-	memset(arp_hdr->ar_tha, 0xff ETHER_ADDR_LEN);
+	memset(arp_hdr->ar_tha, 0xff, ETHER_ADDR_LEN);
 	arp_hdr->ar_tip = q_ip;
 
 	sr_send_packet(sr, packet, pac_len, out_if->name);
@@ -331,7 +331,7 @@ void sr_send_arprep(struct sr_instance *sr, sr_ethernet_hdr_t *from_eth_hdr,
 	struct sr_arp_hdr *arp_hdr  = get_arp_hdr(packet);
 
 	memcpy(eth_hdr->ether_dhost, from_eth_hdr->ether_shost, ETHER_ADDR_LEN);
-	memcpy(eth_hdr->ether_shost, out_if->addr, ETHER_ADDR_LEN);
+	memcpy(eth_hdr->ether_shost, curr_if->addr, ETHER_ADDR_LEN);
 	eth_hdr->ether_type =htons(ethertype_arp);
 
 	arp_hdr->ar_hrd = from_arp_hdr->ar_hrd;
@@ -341,7 +341,7 @@ void sr_send_arprep(struct sr_instance *sr, sr_ethernet_hdr_t *from_eth_hdr,
 	arp_hdr->ar_op = htons(arp_op_reply);
 	memcpy(arp_hdr->ar_sha, curr_if->addr, ETHER_ADDR_LEN);
 	arp_hdr->ar_sip = curr_if->ip;
-	memcpy(arp_hdr->ar_tha, from_arp_hdr->addr, ETHER_ADDR_LEN);
+	memcpy(arp_hdr->ar_tha, from_arp_hdr->sha, ETHER_ADDR_LEN);
 	arp_hdr->ar_tip = from_arp_hdr->ar_sip;
 
 	sr_send_packet(sr, packet, pac_len, curr_if->name);
@@ -368,7 +368,7 @@ uint8_t icmp_check_size(unsigned int len){
 	return (len >= (sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t) + sizeof(sr_icmp_t11_hdr_t)));
 }
 
-uint8_t icmp_check_sum(sr_icmp_hdr_t *icmp_hdr){
+uint8_t icmp_check_sum(sr_icmp_t11_hdr_t *icmp_hdr){
 
 	uint8_t valid = 0;
 	uint16_t temp = icmp_hdr->icmp_sum;
