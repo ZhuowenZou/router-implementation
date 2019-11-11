@@ -311,7 +311,7 @@ void sr_send_arpreq(struct sr_instance *sr, uint32_t q_ip){
 
 	arp_hdr->ar_hrd = htons(arp_hrd_ethernet);
 	arp_hdr->ar_pro = htons(ethertype_ip);
-	arp_hdr->ar_hln = ETHER_ARRD_LEN;
+	arp_hdr->ar_hln = ETHER_ADDR_LEN;
 	arp_hdr->ar_pln = 4;
 	arp_hdr->ar_op = htons(arp_op_request);
 	memcpy(arp_hdr->ar_sha, out_if->addr, ETHER_ADDR_LEN);
