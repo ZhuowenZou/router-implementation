@@ -21,7 +21,7 @@ uint8_t ip_check_sanity(sr_ip_hdr_t *ip_hdr, unsigned int len) {
 }
 
 //ICMP sanity check (min size + checksum)
-uint8_t icmp_check_sanity(sr_ip_hdr_t *ip_hdr, sr_icmp_hdr_t *icmp_hdr, unsigned int len) {
+uint8_t icmp_check_sanity(sr_ip_hdr_t *ip_hdr, sr_icmp_t11_hdr_t *icmp_hdr, unsigned int len) {
 	uint8_t valid = 1;
 	// Check min size limit
 	if (!icmp_check_size(len)){
@@ -80,7 +80,7 @@ void sr_my_ip_handler(struct sr_instance* sr, uint8_t *packet, unsigned int len,
 	switch (ip_protocol){
 		// Hanlde icmp
 		case ip_protocol_icmp:
-			sr_icmp_hdr_t* icmp_hdr = get_icmp_hdr(packet);
+			sr_icmp_t11_hdr_t* icmp_hdr = get_icmp_hdr(packet);
 
 			// Check sanity
 			if (!icmp_check_sanity(ip_hdr, icmp_hdr, len))
@@ -124,9 +124,8 @@ void sr_forward_ip(struct sr_instance* sr, uint8_t *packet, unsigned int len, st
 		Debug("Packet's ip_dst's interface not found on routing table.\n");
 		sr_send_icmp(sr, packet, icmp_type_dest_unreach, icmp_code_net_unreach, curr_if);
 	}
-
-
 }
+
 
 
 

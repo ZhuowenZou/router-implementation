@@ -3,7 +3,9 @@
 #include <string.h>
 #include "sr_protocol.h"
 #include "sr_utils.h"
+#include "sr_router.h"
 
+//TODO CHECK htons and ntohs again
 
 uint16_t cksum (const void *_data, int len) {
   const uint8_t *data = _data;
@@ -182,4 +184,206 @@ void print_hdrs(uint8_t *buf, uint32_t length) {
     fprintf(stderr, "Unrecognized Ethernet Type: %d\n", ethtype);
   }
 }
+
+// Header getters
+sr_ethernet_hdr_t *get_eth_hdr(uint8_t *packet){
+	return (sr_ethernet_hdr_t *)packet;
+}
+sr_arp_hdr_t *get_arp_hdr(uint8_t *packet){
+	return (sr_arp_hdr_t *)(packet + sizeof(sr_ethernet_hdr_t));
+}
+sr_ip_hdr_t *get_ip_hdr(uint8_t *packet){
+	return (sr_ip_hdr_t *)(packet + sizeof(sr_ethernet_hdr_t));
+}
+sr_icmp_t11_hdr_t *get_icmp_hdr(uint8_t *packet){
+	return (sr_icmp_t11_hdr_t *)(packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t));
+}
+
+// Router Table Lookup
+struct sr_if* sr_dst_if(struct sr_instance *sr, uint32_t dst){
+
+	struct sr_rt* rt_iter = sr->routing_table;
+	uint32_t masked = 0; //the after-mask
+	while (rt_iter){
+		mask = rt_iter->mask.s_addr & dst;
+		if (masked == rt_iter->dest.s_addr)
+			return sr_get_interface(sr, rt_iter->interface);
+		rt_iter = rt_iter->next;
+	}
+	//not found
+	return NULL;
+}
+
+// Populators: handle populating the headers and actually send them out via sr_send_packet
+void sr_forward_packet(struct sr_instance *sr, uint8_t *packet, unsigned int len, uint8_t* dst_mac, struct sr_if *out_if){
+
+	sr_ethernet_hdr_t *eth_hdr = get_eth_hdr(packet);
+	sr_ip_hdr_t *ip_hdr = get_ip_hdr(packet);
+	memcpy(eth_hdr->ether_dhost, dst_mac, ETHER_ADDR_LEN);
+	memcpy(eth_hdr->ether_shost, out_if->addr, ETHER_ADDR_LEN);
+	ip_hdr->ip_sum = 0;
+	ip_hdr->ip_sum = cksum((void*)ip_hdr, sizeof(sr_ip_hdr_t));
+	sr_send_packet(sr, packet, len, out_if->name);
+}
+
+void sr_icmp_echo(struct sr_instance *sr, uint8_t icmp_type, uint8_t icmp_code, uint8_t* packet, int len, struct sr_if *curr_if){
+
+	sr_ethernet_hdr_t *eth_hdr = get_eth_hdr(packet);
+	sr_ip_hdr_t *ip_hdr = get_ip_hdr(packet);
+	sr_icmp_t11_hdr_t *icmp_hdr = get_icmp_hdr(packet);
+	struct sr_if *out_if = sr_dst_if(sr, ip_hdr->ip_src);
+
+	//eth hdr
+	memcpy(eth_hdr->ether_dhost, eth_hdr->ether_shost, ETHER_ADDR_LEN);
+	memcpy(eth_hdr->ether_shost, out_if->addr, ETHER_ADDR_LEN);
+
+	//ip hdr: going back
+	ip_hdr->ip_dst = ip_hdr->ip_src;
+	ip_hdr->ip_src = curr_if->ip;
+
+	//icmp hdr
+	icmp_hdr->icmp_type = icmp_type;
+	icmp_hdr->icmp_code = icmp_code;
+	icmp_hdr->sum = 0;
+	icmp_hdr->sum =cksum(icmp_hdr, sizeof(sr_icmp_t11_hdr_t));
+
+	sr_send_packet(sr, packet, len, out_if->name);
+}
+
+void sr_send_icmp(struct sr_instance *sr, uint8_t *recv, uint8_t icmp_type, uint8_t icmp_code, uint8_t* packet, struct sr_if *curr_if){
+
+	unsigned int pac_len = sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t) + sizeof(sr_icmp_t11_hdr_t);
+	uint8_t *packet = (uint8_t *)malloc(pac_len);
+	memset(packet, 0, pac_len);
+
+	sr_ethernet_hdr_t *eth_hdr = get_eth_hdr(packet);
+	sr_ip_hdr_t *ip_hdr = get_ip_hdr(packet);
+	sr_icmp_t11_hdr_t *icmp_hdr = get_icmp_hdr(packet);
+	sr_ethernet_hdr_t *recv_eth_hdr = get_eth_hdr(recv);
+	sr_ip_hdr_t *recv_ip_hdr = get_icmp_hdr(recv);
+
+	struct sr_if *out_if = sr_dst_if(sr, curr_ip_hdr->ip_src);
+
+	//eth hdr
+	memcpy(eth_hdr->ether_dhost, recv_eth_hdr->ether_shost, ETHER_ADDR_LEN);
+	memcpy(eth_hdr->ether_shost, out_if->addr, ETHER_ADDR_LEN);
+	eth_hdr->ether_type = htons(erthertype_ip);
+
+	//ip hdr: jesus this is gonna hurt TODO: what's IP ID
+	ip_hdr->ip_hl = recv_ip_hdr->ip_hl;
+	ip_hdr->ip_v = recv_ip_hdr->ip_v;
+	ip_hdr->ip_tos = recv_ip_hdr->ip_tos;
+	ip_hdr->ip_len = htons(pac_len - sizeof(sr_ethernet_hdr_t));
+	ip_hdr->ip_id = 0;
+	ip_hdr->ip_off = htons(IP_DF);			/* fragment offset field */
+	ip_hdr->ip_ttl = INIT_TTL;			/* time to live */
+	ip_hdr->ip_p = ip_protocol_icmp;			/* protocol */
+	ip_hdr->ip_dst = recv_ip_hdr->ip_src;
+	ip_hdr->ip_src = curr_if->ip;
+	ip_hdr->ip_sum = 0;			/* checksum */
+	ip_hdr->ip_sum = cksum(ip_hdr, sizeof(sr_ip_hdr_t));			/* checksum */
+
+	//icmp hdr
+	icmp_hdr->icmp_type = icmp_type;
+	icmp_hdr->icmp_code = icmp_code;
+	memcpy(icmp_hdr->data, recv_ip_hdr, ICMP_DATA_SIZE);
+	icmp_hdr->sum = 0;
+	icmp_hdr->sum = cksum(icmp_hdr, sizeof(sr_icmp_t11_hdr_t));
+
+	sr_send_packet(sr, packet, len, out_if->name);
+}
+
+void sr_send_arpreq(struct sr_instance *sr, uint32_t q_ip){
+
+	unsigned int pac_len = sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t);
+	uint8_t *packet = (uint8_t *)malloc(pac_len);
+	memset(packet, 0, pac_len);
+
+	struct sr_if *out_if =sr_dst_if(sr, q_ip);
+	struct sr_ethernet_hdr *eth_hdr  = get_eth_hdr(packet);
+	struct sr_arp_hdr *arp_hdr  = get_arp_hdr(packet);
+
+	memset(eth_hdr->ether_dhost, 0xff, ETHER_ADDR_LEN);
+	memcpy(eth_hdr->ether_shost, out_if->addr, ETHER_ADDR_LEN);
+	eth_hdr->ether_type =htons(ethertype_arp);
+
+	arp_hdr->ar_hrd = htons(arp_hrd_ethernet);
+	arp_hdr->ar_pro = htons(ethertype_ip);
+	arp_hdr->ar_hln = ETHER_ARRD_LEN;
+	arp_hdr->ar_pln = 4;
+	arp_hdr->ar_op = htons(arp_op_request);
+	memcpy(arp_hdr->ar_sha, out_if->addr, ETHER_ADDR_LEN);
+	arp_hdr->ar_sip = out_if->ip;
+	memset(arp_hdr->ar_tha, 0xff ETHER_ADDR_LEN);
+	arp_hdr->ar_tip = q_ip;
+
+	sr_send_packet(sr, packet, pac_len, out_if->name);
+}
+
+void sr_send_arprep(struct sr_instance *sr, sr_ethernet_hdr_t *from_eth_hdr,
+		sr_arp_hdr_t *from_srp_hdr, struct sr_if* curr_if) {
+
+	unsigned int pac_len = sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t);
+	uint8_t *packet = (uint8_t *)malloc(pac_len);
+	memset(packet, 0, pac_len);
+
+	struct sr_ethernet_hdr *eth_hdr  = get_eth_hdr(packet);
+	struct sr_arp_hdr *arp_hdr  = get_arp_hdr(packet);
+
+	memcpy(eth_hdr->ether_dhost, from_eth_hdr->ether_shost, ETHER_ADDR_LEN);
+	memcpy(eth_hdr->ether_shost, out_if->addr, ETHER_ADDR_LEN);
+	eth_hdr->ether_type =htons(ethertype_arp);
+
+	arp_hdr->ar_hrd = from_arp_hdr->ar_hrd;
+	arp_hdr->ar_pro = from_arp_hdr->ar_pro;
+	arp_hdr->ar_hln = from_arp_hdr->ar_hln;
+	arp_hdr->ar_pln = from_arp_hdr->ar_pln;
+	arp_hdr->ar_op = htons(arp_op_reply);
+	memcpy(arp_hdr->ar_sha, curr_if->addr, ETHER_ADDR_LEN);
+	arp_hdr->ar_sip = curr_if->ip;
+	memcpy(arp_hdr->ar_tha, from_arp_hdr->addr, ETHER_ADDR_LEN);
+	arp_hdr->ar_tip = from_arp_hdr->ar_sip;
+
+	sr_send_packet(sr, packet, pac_len, curr_if->name);
+}
+
+
+// Sanity checks
+uint8_t ip_check_size(unsigned int len){
+	return (len >= (sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t)));
+}
+uint8_t ip_check_sum(sr_ip_hdr_t *ip_hdr){
+
+	uint8 valid = 0;
+	uint16 temp = ip_hdr->ip_sum;
+	ip_hdr->ip_sum = 0;
+	if (cksum(ip_hdr, sizeof(sr_ip_hdr_t)) == temp){
+		valid = 1;
+	}
+	ip_hdr->ip_sum = temp;
+	return valid;
+}
+
+uint8_t icmp_check_size(unsigned int len){
+	return (len >= (sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t) + sizeof(sr_icmp_hdr_t)));
+}
+
+uint8_t icmp_check_sum(sr_ip_hdr_t *icmp_hdr){
+
+	uint8 valid = 0;
+	uint16 temp = icmp_hdr->icmp_sum;
+	icmp_hdr->icmp_sum = 0;
+	if (cksum(icmp_hdr, sizeof(sr_icmp_t11_hdr_t)) == temp){
+		valid = 1;
+	}
+	icmp_hdr->icmp_sum = temp;
+	return valid;
+}
+
+uint8_t arp_check_size(unsigned int len){
+	return (len >= (sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t)));
+}
+
+
+
 
