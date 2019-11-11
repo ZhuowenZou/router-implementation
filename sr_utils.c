@@ -5,6 +5,8 @@
 #include "sr_utils.h"
 #include "sr_router.h"
 
+#include "sr_rt.h"
+
 //TODO CHECK htons and ntohs again
 
 uint16_t cksum (const void *_data, int len) {

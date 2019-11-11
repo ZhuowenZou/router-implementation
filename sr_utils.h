@@ -63,7 +63,7 @@ void sr_send_arprep(struct sr_instance *sr, sr_ethernet_hdr_t *from_eth_hdr,
 uint8_t ip_check_size(unsigned int len);
 uint8_t ip_check_sum(sr_ip_hdr_t *ip_hdr);
 uint8_t icmp_check_size(unsigned int len);
-uint8_t icmp_check_sum(sr_ip_hdr_t *icmp_hdr);
+uint8_t icmp_check_sum(sr_icmp_t11_hdr_t *icmp_hdr);
 uint8_t arp_check_size(unsigned int len);
 
 #endif /* -- SR_UTILS_H -- */
