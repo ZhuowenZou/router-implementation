@@ -39,7 +39,7 @@ void sr_arpcache_handlereq(struct sr_instance *sr, struct sr_arpreq *  request){
 			request->times_sent++;
 		}
 	}
-	pthread_mutex_unlock(&(sr->cache->lock));
+	pthread_mutex_unlock(&(sr->cache.lock));
 }
 
 /* 
