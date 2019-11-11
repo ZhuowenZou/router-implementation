@@ -20,11 +20,11 @@ void sr_arp_handler(struct sr_instance* sr, uint8_t *packet, unsigned int len, s
 			Debug("Detect ARP Request.\n");
 			sr_arpreq_handler(sr, eth_hdr, arp_hdr, curr_if);
 			break;
-		case arp_op_request:
+		case arp_op_reply:
 			Debug("Detect ARP Reply.\n");
 			sr_arprep_handler(sr, arp_hdr, curr_if);
 			break;
-		default
+		default:
 			Debug("GET ARP non-req-nor-rep type, dropping.\n");
 	}
 }
@@ -34,11 +34,11 @@ void sr_arp_handler(struct sr_instance* sr, uint8_t *packet, unsigned int len, s
 void sr_arpreq_handler(struct sr_instance* sr, sr_ethernet_hdr_t *from_eth_hdr, sr_arp_hdr_t *from_arp_hdr, struct sr_if *curr_if){
 
 	sr_arpcache_insert(&(sr->cache), from_arp_hdr->ar_sha, from_arp_hdr->ar_sip);
-	sr_send_arprep(sr, from_eth_hdr, req_arp_hdr, curr_if);
+	sr_send_arprep(sr, from_eth_hdr, from_arp_hdr, curr_if);
 
 	// hit
 	if (from_arp_hdr->ar_tip == curr_if->ip){
-		Debug("Received ARP Request at interface $s, replying", curr_if->name);
+		Debug("Received ARP Request at interface $s, replying\n", curr_if->name);
 	}
 }
 
@@ -46,8 +46,8 @@ void sr_arpreq_handler(struct sr_instance* sr, sr_ethernet_hdr_t *from_eth_hdr, 
 void sr_arprep_handler(struct sr_instance* sr, sr_arp_hdr_t *arp_hdr, struct sr_if *curr_if){
 
 	// hit, caching results
-	if (srp_hdr->ar_tip == curr_if->ip){
-		Debug("Received ARP Reply at interface $s./n", curr_if->name);
+	if (arp_hdr->ar_tip == curr_if->ip){
+		Debug("Received ARP Reply at interface $s.\n", curr_if->name);
 
 		pthread_mutex_lock(&(sr->cache.lock));
 
