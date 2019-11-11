@@ -45,4 +45,23 @@ void print_hdr_arp(uint8_t *buf);
 /* prints all headers, starting from eth */
 void print_hdrs(uint8_t *buf, uint32_t length);
 
+//header - getters
+sr_ethernet_hdr_t *get_eth_hdr(uint8_t *packet);
+sr_arp_hdr_t *get_arp_hdr(uint8_t *packet);
+sr_ip_hdr_t *get_ip_hdr(uint8_t *packet);
+sr_icmp_t11_hdr_t *get_icmp_hdr(uint8_t *packet);
+
+struct sr_if* sr_dst_if(struct sr_instance *sr, uint32_t dst);
+void sr_forward_packet(struct sr_instance *sr, uint8_t *packet, unsigned int len, uint8_t* dst_mac, struct sr_if *out_if);
+void sr_icmp_echo(struct sr_instance *sr, uint8_t icmp_type, uint8_t icmp_code, uint8_t* packet, int len, struct sr_if *curr_if);
+void sr_send_icmp(struct sr_instance *sr, uint8_t *recv, uint8_t icmp_type, uint8_t icmp_code, uint8_t* packet, struct sr_if *curr_if);
+void sr_send_arpreq(struct sr_instance *sr, uint32_t q_ip);
+void sr_send_arprep(struct sr_instance *sr, sr_ethernet_hdr_t *from_eth_hdr,
+		sr_arp_hdr_t *from_srp_hdr, struct sr_if* curr_if);
+uint8_t ip_check_size(unsigned int len);
+uint8_t ip_check_sum(sr_ip_hdr_t *ip_hdr);
+uint8_t icmp_check_size(unsigned int len);
+uint8_t icmp_check_sum(sr_ip_hdr_t *icmp_hdr);
+uint8_t arp_check_size(unsigned int len);
+
 #endif /* -- SR_UTILS_H -- */
