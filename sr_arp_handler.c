@@ -38,7 +38,7 @@ void sr_arpreq_handler(struct sr_instance* sr, sr_ethernet_hdr_t *from_eth_hdr, 
 
 	// hit
 	if (from_arp_hdr->ar_tip == curr_if->ip){
-		Debug("Received ARP Request at interface $s, replying\n", curr_if->name);
+		Debug("Received ARP Request at interface %s, replying\n", curr_if->name);
 	}
 }
 
@@ -47,7 +47,7 @@ void sr_arprep_handler(struct sr_instance* sr, sr_arp_hdr_t *arp_hdr, struct sr_
 
 	// hit, caching results
 	if (arp_hdr->ar_tip == curr_if->ip){
-		Debug("Received ARP Reply at interface $s.\n", curr_if->name);
+		Debug("Received ARP Reply at interface %s.\n", curr_if->name);
 
 		pthread_mutex_lock(&(sr->cache.lock));
 

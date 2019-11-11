@@ -75,6 +75,7 @@ void sr_ip_handler(struct sr_instance* sr, uint8_t* packet, unsigned int len, st
 void sr_my_ip_handler(struct sr_instance* sr, uint8_t *packet, unsigned int len, struct sr_if *curr_if){
 
 	sr_ip_hdr_t* ip_hdr = get_ip_hdr(packet);
+	sr_icmp_t11_hdr_t* icmp_hdr;
 	uint8_t ip_protocol = ip_hdr->ip_p;
 
 	switch (ip_protocol){
