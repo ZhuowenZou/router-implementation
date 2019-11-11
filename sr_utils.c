@@ -370,12 +370,12 @@ uint8_t icmp_check_size(unsigned int len){
 	return (len >= (sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t) + sizeof(sr_icmp_t11_hdr_t)));
 }
 
-uint8_t icmp_check_sum(sr_icmp_t11_hdr_t *icmp_hdr){
+uint8_t icmp_check_sum(uint16_t len, sr_icmp_t11_hdr_t *icmp_hdr){
 
 	uint8_t valid = 0;
 	uint16_t temp = icmp_hdr->icmp_sum;
 	icmp_hdr->icmp_sum = 0;
-	if (cksum(icmp_hdr, sizeof(sr_icmp_t11_hdr_t)) == temp){
+	if (cksum( (uint8_t *)icmp_hdr, ntohs(len) - sizeof(sr_icmp_t11_hdr_t)) == temp){
 		valid = 1;
 	}
 	icmp_hdr->icmp_sum = temp;

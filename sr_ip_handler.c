@@ -62,7 +62,7 @@ void sr_ip_handler(struct sr_instance* sr, uint8_t* packet, unsigned int len, st
 	// TTL expire, reply ICMP
 	if (ip_hdr->ip_ttl == 0){
 		Debug("IP Packet TTL expired, sending ICMP.\n");
-		sr_send_icmp(sr, packet, icmp_protocal_type_time_exceed, icmp_protocal_code_ttl_expired, curr_if);
+		sr_send_icmp(sr, packet, icmp_type_time_exceed, icmp_code_ttl_expired, curr_if);
 		return;
 	}
 
@@ -87,7 +87,7 @@ void sr_my_ip_handler(struct sr_instance* sr, uint8_t *packet, unsigned int len,
 				return;
 
 			//Handle echo
-			if (icmp_hdr->icmp_type == icmp_type_echo_req && icmp_hdr->icmp_code == icmp_code_emnpty){
+			if (icmp_hdr->icmp_type == icmp_type_echo_req && icmp_hdr->icmp_code == icmp_code_empty){
 				sr_icmp_echo(sr, icmp_type_echo_rep, icmp_code_empty, packet, len, curr_if);
 			}
 			break;
