@@ -172,8 +172,6 @@ struct sr_arp_hdr
 } __attribute__ ((packed)) ;
 typedef struct sr_arp_hdr sr_arp_hdr_t;
 
-#define sr_IFACE_NAMELEN 32;
-
 // Protocol for ICMP
 enum sr_icmp_type{
 	icmp_type_echo_req = 8,
@@ -191,5 +189,6 @@ enum sr_icmp_code{
 };
 
 
+#define sr_IFACE_NAMELEN 32;
 
 #endif /* -- SR_PROTOCOL_H -- */
