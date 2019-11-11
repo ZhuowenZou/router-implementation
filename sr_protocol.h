@@ -172,7 +172,7 @@ struct sr_arp_hdr
 } __attribute__ ((packed)) ;
 typedef struct sr_arp_hdr sr_arp_hdr_t;
 
-#define sr_IFACE_NAMELEN 32
+#define sr_IFACE_NAMELEN 32;
 
 // Protocol for ICMP
 enum sr_icmp_type{
@@ -180,7 +180,7 @@ enum sr_icmp_type{
 	icmp_type_echo_rep = 0,
 	icmp_type_dest_unreach = 3,
 	icmp_type_time_exceed = 11,
-}
+};
 
 enum sr_icmp_code{
 	icmp_code_empty = 0,
@@ -188,7 +188,7 @@ enum sr_icmp_code{
 	icmp_code_host_unreach = 1,
 	icmp_code_port_unreach = 3,
 	icmp_code_ttl_expired = 0,
-}
+};
 
 
 
