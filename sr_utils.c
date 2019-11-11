@@ -205,7 +205,7 @@ struct sr_if* sr_dst_if(struct sr_instance *sr, uint32_t dst){
 	struct sr_rt* rt_iter = sr->routing_table;
 	uint32_t masked = 0; //the after-mask
 	while (rt_iter){
-		mask = rt_iter->mask.s_addr & dst;
+		masked = rt_iter->mask.s_addr & dst;
 		if (masked == rt_iter->dest.s_addr)
 			return sr_get_interface(sr, rt_iter->interface);
 		rt_iter = rt_iter->next;
@@ -244,13 +244,13 @@ void sr_icmp_echo(struct sr_instance *sr, uint8_t icmp_type, uint8_t icmp_code, 
 	//icmp hdr
 	icmp_hdr->icmp_type = icmp_type;
 	icmp_hdr->icmp_code = icmp_code;
-	icmp_hdr->sum = 0;
-	icmp_hdr->sum =cksum(icmp_hdr, sizeof(sr_icmp_t11_hdr_t));
+	icmp_hdr->icmp_sum = 0;
+	icmp_hdr->icmp_sum =cksum(icmp_hdr, sizeof(sr_icmp_t11_hdr_t));
 
 	sr_send_packet(sr, packet, len, out_if->name);
 }
 
-void sr_send_icmp(struct sr_instance *sr, uint8_t *recv, uint8_t icmp_type, uint8_t icmp_code, uint8_t* packet, struct sr_if *curr_if){
+void sr_send_icmp(struct sr_instance *sr, uint8_t *recv, uint8_t icmp_type, uint8_t icmp_code, struct sr_if *curr_if){
 
 	unsigned int pac_len = sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t) + sizeof(sr_icmp_t11_hdr_t);
 	uint8_t *packet = (uint8_t *)malloc(pac_len);
@@ -260,14 +260,14 @@ void sr_send_icmp(struct sr_instance *sr, uint8_t *recv, uint8_t icmp_type, uint
 	sr_ip_hdr_t *ip_hdr = get_ip_hdr(packet);
 	sr_icmp_t11_hdr_t *icmp_hdr = get_icmp_hdr(packet);
 	sr_ethernet_hdr_t *recv_eth_hdr = get_eth_hdr(recv);
-	sr_ip_hdr_t *recv_ip_hdr = get_icmp_hdr(recv);
+	sr_ip_hdr_t *recv_ip_hdr = get_ip_hdr(recv);
 
-	struct sr_if *out_if = sr_dst_if(sr, curr_ip_hdr->ip_src);
+	struct sr_if *out_if = sr_dst_if(sr, recv_ip_hdr->ip_src);
 
 	//eth hdr
 	memcpy(eth_hdr->ether_dhost, recv_eth_hdr->ether_shost, ETHER_ADDR_LEN);
 	memcpy(eth_hdr->ether_shost, out_if->addr, ETHER_ADDR_LEN);
-	eth_hdr->ether_type = htons(erthertype_ip);
+	eth_hdr->ether_type = htons(ethertype_ip);
 
 	//ip hdr: jesus this is gonna hurt TODO: what's IP ID
 	ip_hdr->ip_hl = recv_ip_hdr->ip_hl;
@@ -287,10 +287,10 @@ void sr_send_icmp(struct sr_instance *sr, uint8_t *recv, uint8_t icmp_type, uint
 	icmp_hdr->icmp_type = icmp_type;
 	icmp_hdr->icmp_code = icmp_code;
 	memcpy(icmp_hdr->data, recv_ip_hdr, ICMP_DATA_SIZE);
-	icmp_hdr->sum = 0;
-	icmp_hdr->sum = cksum(icmp_hdr, sizeof(sr_icmp_t11_hdr_t));
+	icmp_hdr->icmp_sum = 0;
+	icmp_hdr->icmp_sum = cksum(icmp_hdr, sizeof(sr_icmp_t11_hdr_t));
 
-	sr_send_packet(sr, packet, len, out_if->name);
+	sr_send_packet(sr, packet, pac_len, out_if->name);
 }
 
 void sr_send_arpreq(struct sr_instance *sr, uint32_t q_ip){
@@ -341,7 +341,7 @@ void sr_send_arprep(struct sr_instance *sr, sr_ethernet_hdr_t *from_eth_hdr,
 	arp_hdr->ar_op = htons(arp_op_reply);
 	memcpy(arp_hdr->ar_sha, curr_if->addr, ETHER_ADDR_LEN);
 	arp_hdr->ar_sip = curr_if->ip;
-	memcpy(arp_hdr->ar_tha, from_arp_hdr->sha, ETHER_ADDR_LEN);
+	memcpy(arp_hdr->ar_tha, from_arp_hdr->ar_sha, ETHER_ADDR_LEN);
 	arp_hdr->ar_tip = from_arp_hdr->ar_sip;
 
 	sr_send_packet(sr, packet, pac_len, curr_if->name);

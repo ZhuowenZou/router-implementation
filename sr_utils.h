@@ -56,7 +56,7 @@ sr_icmp_t11_hdr_t *get_icmp_hdr(uint8_t *packet);
 struct sr_if* sr_dst_if(struct sr_instance *sr, uint32_t dst);
 void sr_forward_packet(struct sr_instance *sr, uint8_t *packet, unsigned int len, uint8_t* dst_mac, struct sr_if *out_if);
 void sr_icmp_echo(struct sr_instance *sr, uint8_t icmp_type, uint8_t icmp_code, uint8_t* packet, int len, struct sr_if *curr_if);
-void sr_send_icmp(struct sr_instance *sr, uint8_t *recv, uint8_t icmp_type, uint8_t icmp_code, uint8_t* packet, struct sr_if *curr_if);
+void sr_send_icmp(struct sr_instance *sr, uint8_t *recv, uint8_t icmp_type, uint8_t icmp_code, struct sr_if *curr_if);
 void sr_send_arpreq(struct sr_instance *sr, uint32_t q_ip);
 void sr_send_arprep(struct sr_instance *sr, sr_ethernet_hdr_t *from_eth_hdr,
 		sr_arp_hdr_t *from_srp_hdr, struct sr_if* curr_if);
