@@ -206,14 +206,24 @@ struct sr_if* sr_dst_if(struct sr_instance *sr, uint32_t dst){
 
 	struct sr_rt* rt_iter = sr->routing_table;
 	uint32_t masked = 0; //the after-mask
+	uint32_t long_mask = 0; //the longest mask
+	sr_if* target_if = NULL;
 	while (rt_iter){
 		masked = rt_iter->mask.s_addr & dst;
 		if (masked == rt_iter->dest.s_addr)
-			return sr_get_interface(sr, rt_iter->interface);
+			if (long_mask == 0){
+				long_mask = rt_iter->mask.s_addr;
+				target_if = sr_get_interface(sr, rt_iter->interface);
+			}
+			else if (long_mask & rt_iter->mask.s_addr == long_mask){
+				// found longer match, switch mask
+				long_mask = rt_iter->mask.s_addr;
+				target_if = sr_get_interface(sr, rt_iter->interface);
+			}
 		rt_iter = rt_iter->next;
 	}
 	//not found
-	return NULL;
+	return target_if;
 }
 
 // Populators: handle populating the headers and actually send them out via sr_send_packet
