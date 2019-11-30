@@ -210,16 +210,17 @@ struct sr_if* sr_dst_if(struct sr_instance *sr, uint32_t dst){
 	struct sr_if* target_if = NULL;
 	while (rt_iter){
 		masked = rt_iter->mask.s_addr & dst;
-		if (masked == rt_iter->dest.s_addr)
+		if (masked == rt_iter->dest.s_addr){
 			if (long_mask == 0){
 				long_mask = rt_iter->mask.s_addr;
 				target_if = sr_get_interface(sr, rt_iter->interface);
 			}
-			else if (long_mask & rt_iter->mask.s_addr == long_mask){
+			else if ((long_mask & rt_iter->mask.s_addr) == long_mask){
 				// found longer match, switch mask
 				long_mask = rt_iter->mask.s_addr;
 				target_if = sr_get_interface(sr, rt_iter->interface);
 			}
+		}
 		rt_iter = rt_iter->next;
 	}
 	//not found
