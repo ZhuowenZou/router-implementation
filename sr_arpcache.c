@@ -128,7 +128,7 @@ struct sr_arpreq *sr_arpcache_queuereq(struct sr_arpcache *cache,
         strncpy(new_pkt->iface, iface, sr_IFACE_NAMELEN);
 
         tail = req->packets;
-        while (tail->next){
+        while (tail->next != NULL){
         	tail = tail->next;
         }
         tail->next = new_pkt;
