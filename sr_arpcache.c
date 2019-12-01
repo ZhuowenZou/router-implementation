@@ -128,11 +128,17 @@ struct sr_arpreq *sr_arpcache_queuereq(struct sr_arpcache *cache,
         strncpy(new_pkt->iface, iface, sr_IFACE_NAMELEN);
 
         tail = req->packets;
-        while (tail->next != NULL){
-        	tail = tail->next;
+        if (tail){
+			while (tail->next != NULL){
+				tail = tail->next;
+			}
+			tail->next = new_pkt;
+			new_pkt->next = NULL;
         }
-        tail->next = new_pkt;
-    	new_pkt->next = NULL;
+        else {
+        	req->packets = new_pkt;
+        	new_pkt->next = NULL;
+        }
     }
     
     pthread_mutex_unlock(&(cache->lock));
