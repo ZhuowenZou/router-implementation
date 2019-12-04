@@ -198,7 +198,8 @@ sr_ip_hdr_t *get_ip_hdr(uint8_t *packet){
 	return (sr_ip_hdr_t *)(packet + sizeof(sr_ethernet_hdr_t));
 }
 sr_icmp_t11_hdr_t *get_icmp_hdr(uint8_t *packet){
-	return (sr_icmp_t11_hdr_t *)(packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t));
+	sr_ip_hdr_t * ip_hdr = get_ip_hdr(packet);
+	return (sr_icmp_t11_hdr_t *)(packet + sizeof(sr_ethernet_hdr_t) + ip_hdr->ip_len);
 }
 
 // Router Table Lookup
