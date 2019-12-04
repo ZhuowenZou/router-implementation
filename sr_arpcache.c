@@ -17,7 +17,7 @@
 // Why is this called handle I already name something handler oof
 void sr_arpcache_handlereq(struct sr_instance *sr, struct sr_arpreq *  request){
 
-	pthread_mutex_lock(&(sr->cache.lock));
+	//pthread_mutex_lock(&(sr->cache.lock));
 
 	time_t curr = time(NULL);
 
@@ -39,7 +39,7 @@ void sr_arpcache_handlereq(struct sr_instance *sr, struct sr_arpreq *  request){
 			request->times_sent++;
 		}
 	}
-	pthread_mutex_unlock(&(sr->cache.lock));
+	//pthread_mutex_unlock(&(sr->cache.lock));
 }
 
 /* 
