@@ -199,7 +199,12 @@ sr_ip_hdr_t *get_ip_hdr(uint8_t *packet){
 }
 sr_icmp_t11_hdr_t *get_icmp_hdr(uint8_t *packet){
 	sr_ip_hdr_t * ip_hdr = get_ip_hdr(packet);
-	return (sr_icmp_t11_hdr_t *)(packet + sizeof(sr_ethernet_hdr_t) + 4 * ip_hdr->ip_hl);
+	uint_16 hdr_len;
+	if (ip_hdr->ip_hl == 0)
+		hdr_len = 5
+	else
+		hdr_len = ip_hdr->ip_hl;
+	return (sr_icmp_t11_hdr_t *)(packet + sizeof(sr_ethernet_hdr_t) + 4 * hdr_len);
 }
 
 // Router Table Lookup
