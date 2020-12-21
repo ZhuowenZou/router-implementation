@@ -1,7 +1,5 @@
-Name: Zhuowen Zou
-PID: A14554030
 
-This is the submission for CSE 123 Project 2.It is a simple router capable of handling ip packets, arp request/reply, and ICMP messages. I am not entering the espresso prize.
+This is a simple router capable of handling ip packets, arp request/reply, and ICMP messages. Adapted originally from CSE123 project 2.
 
 The description for each file is below.
 
